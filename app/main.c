@@ -16,10 +16,9 @@ int main() {
     char input[100];
     fgets(input, 100, stdin);
     input[strcspn(input, "\n")] = '\0';
-    #define MAX_ARGS 15
     char* args[MAX_ARGS] = {0};
-    int ret = parse_cmd(input, args, MAX_ARGS);
-    if(ret == -1)
+    int arg_len = parse_cmd(input, args, MAX_ARGS);
+    if(arg_len == -1)
     {
       fprintf(stderr, "Failed to parse args!");
       exit(EXIT_FAILURE);
@@ -28,7 +27,9 @@ int main() {
     int idx = is_builtin(args[0]);
     if(idx != -1)
     {
-      int ret = builtins[idx].handler(0);
+      int ret = builtins[idx].handler((void*) &args[1],
+       /*ignore the comand name at idx 0*/ --arg_len);
+       //TODO: Do error checking after calling the handler
     } else {
       /*check the command exists ant its RX by user */
       const char* usr_bin = "/usr/bin";
@@ -60,20 +61,29 @@ int parse_cmd(char* args, char** pArgs, size_t pArgs_size){
 }
 
 int is_builtin(char* cmd){
+  // printf("Truing... %s", cmd);
   for(int i = 0; i < N_BUILTINS; i++){
-    if(strncmp(builtins[i].cmd, cmd, MAX_CMD_LEN) != 0) return -1;
+    if(strncmp(builtins[i].cmd, cmd, MAX_CMD_LEN) == 0) return i;
   }
-
+  return -1;
 }
 
-int exit_handler(void* status){
-  exit(0);
+int exit_handler(void* vargs, size_t arg_len){
+  /*Check that status makes sense */
+  if(arg_len != 1) return -1;
+  char** argv = (char**) vargs;
+  int err = atoi(argv[0]);
+  exit(err);
 }
-struct builtin handle_exit =  {
-  .cmd="exit",
-  .handler = exit_handler
-};
+
+int echo_handler(void* vargs, size_t arg_len){
+  char** argv = (char**) vargs;
+  for(int i = 0; i < arg_len; i++)
+    printf("%s ", argv[i]); //TODO: Nasty space after the last arg... fix, someday.
+  printf("\n");
+}
 
 void initialize_builtins() {
-  builtins[0] = handle_exit;
+  builtins[0] = (struct builtin) {.cmd="exit", .handler = exit_handler};
+  builtins[1] = (struct builtin) {.cmd="echo", .handler = echo_handler};
 }
