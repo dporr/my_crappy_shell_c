@@ -9,7 +9,7 @@ struct builtin {
 };
 
 /*TODO: Make this a hashmap for efficient access*/
-struct builtin builtins[N_BUILTINS];
+extern struct builtin builtins[N_BUILTINS];
 void initialize_builtins();
 int is_builtin(char* cmd);
 int exit_handler(void* status, size_t arg_len);
