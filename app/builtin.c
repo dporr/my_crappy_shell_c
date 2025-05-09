@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h> //PATH__MAX, NAME_MAX
 
 #include "builtin.h"
 
@@ -37,7 +38,14 @@ int is_builtin(char* cmd){
       printf("%s is a shell builtin\n", argv[0]);
       return idx;
     }
-    printf("%s: not found\n", argv[0]);
+    //Check if cmd is in path
+    char f_path[PATH_MAX] = {0};
+    int err = exists_in_path(argv[0], f_path, PATH_MAX);
+    if( err == -1 || f_path == NULL) {
+      fprintf(stderr, "%s: not found\n", argv[0]);
+      return -1;
+    }
+    printf("%s is %s\n", argv[0], f_path);
     return idx;
   }
   

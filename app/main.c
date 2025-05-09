@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "builtin.h"
+#include <limits.h> //PATH__MAX, NAME_MAX
+
 #include "shell.h"
 
 int main() {
@@ -32,11 +34,9 @@ int main() {
        //TODO: Do error checking after calling the handler
     } else {
       /*check the command exists ant its RX by user */
-      const char* usr_bin = "/usr/bin";
-      char path[4096];
-      snprintf(path, sizeof(path), "%s/%s",usr_bin, input);
-      int ar = access(path,  F_OK|R_OK|X_OK);
-      if( ar == -1) {
+      char f_path[PATH_MAX] = {0};
+      int err = exists_in_path(args[0], f_path, PATH_MAX);
+      if( err == -1 || f_path == NULL) {
         fprintf(stderr, "%s: command not found\n", input);
       }
     }
