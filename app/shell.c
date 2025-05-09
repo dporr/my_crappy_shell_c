@@ -6,6 +6,7 @@
 #include <limits.h> //PATH__MAX, NAME_MAX
 
 #include "shell.h"
+#include <sched.h>
 
 int parse_cmd(char* args, char** pArgs, size_t pArgs_size){
     //split by space -> ["cmd","arg1", "arg2"...]
@@ -51,4 +52,27 @@ int exists_in_path(char* cmd, char* f_path, size_t f_path_size){
   }
   f_path = NULL;
   return -1;
+}
+
+int execvp_child(const char *file, char *const argv[]) {
+  pid_t pid = fork();
+  if (pid < 0) {
+      // fork failed
+      perror("fork:");
+      return -1;
+  } else if (pid == 0) {
+      // child process
+      execvp(file, argv);
+      // if execvp returns, it failed
+      perror("execvp:");
+      exit(EXIT_FAILURE);  // include <stdlib.h>
+  } else {
+      // parent process
+      int status;
+      if (waitpid(pid, &status, 0) == -1) {
+          perror("waitpid:");
+          return -1;
+      }
+      return status;
+  }
 }

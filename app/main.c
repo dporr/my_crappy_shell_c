@@ -27,20 +27,20 @@ int main() {
     }
     // printf("Execute: %s\n", args[0]);
     int idx = is_builtin(args[0]);
+    char f_path[PATH_MAX] = {0};
     if(idx != -1)
     {
       int ret = builtins[idx].handler((void*) &args[1],
        /*ignore the comand name at idx 0*/ --arg_len);
        //TODO: Do error checking after calling the handler
-    } else {
-      /*check the command exists ant its RX by user */
-      char f_path[PATH_MAX] = {0};
-      int err = exists_in_path(args[0], f_path, PATH_MAX);
-      if( err == -1 || f_path == NULL) {
-        fprintf(stderr, "%s: command not found\n", input);
-      }
+    } else if(exists_in_path(args[0],f_path, PATH_MAX-1) != -1){
+      /*for and execve inside child */
+      execvp_child(args[0], &args[0]);
+    }else{
+        fprintf(stderr, "%s: command not found\n", args[0]);
     }
   }
   return 0;
 }
+
 
